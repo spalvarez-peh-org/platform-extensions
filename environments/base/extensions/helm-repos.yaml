@@ -7,14 +7,3 @@ spec:
   interval: 30m
   url: https://istio-release.storage.googleapis.com/charts]
   timeout: 1m
-
----
-apiVersion: source.toolkit.fluxcd.io/v1beta2
-kind: HelmRepository
-metadata:
-  name: projectcalico
-  namespace: flux-system
-spec:
-  interval: 1h
-  url: https://projectcalico.docs.tigera.io/charts
-  timeout: 1m

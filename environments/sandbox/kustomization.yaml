@@ -4,7 +4,6 @@ resources:
   - ../base
 patches:
   - path: patches/istio.yaml
-  - path: patches/calico.yaml
 labels:
   - pairs: { env: sandbox }
     includeSelectors: true

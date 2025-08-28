@@ -3,4 +3,3 @@ kind: Kustomization
 resources:
   - extensions/helm-repos.yaml
   - extensions/istio-helm.yaml
-  - extensions/calico-helm.yaml
