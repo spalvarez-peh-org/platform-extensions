@@ -1,0 +1,112 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: istio-base
+  namespace: istio-system
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: base
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+        namespace: flux-system
+      # version is patched per-env (don’t set here)
+  targetNamespace: istio-system
+  install:
+    createNamespace: true
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+      rollback: true  
+  values: {}   
+
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: istiod
+  namespace: istio-system
+spec:
+  interval: 5m
+  dependsOn:
+    - name: istio-base
+      namespace: istio-system
+  chart:
+    spec:
+      chart: istiod
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+        namespace: flux-system
+  targetNamespace: istio-system
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+      rollback: true  
+
+---
+
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: istio-ingress
+  namespace: istio-ingress
+spec:
+  interval: 5m
+  dependsOn:
+    - name: istio-base
+      namespace: istio-system
+    - name: istiod
+      namespace: istio-system
+  chart:
+    spec:
+      chart: gateway
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+        namespace: flux-system
+      interval: 1m
+  targetNamespace: istio-ingress
+  install:
+    createNamespace: true
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+      rollback: true 
+  values:
+    # keep the conventional name so your Gateway selector uses { istio: ingressgateway }
+    nameOverride: istio-ingressgateway
+
+    # Run on the control-plane node so host->nodePort mapping always works in kind
+    nodeSelector:
+      node-role.kubernetes.io/control-plane: ""
+    tolerations:
+      - key: "node-role.kubernetes.io/control-plane"
+        operator: "Exists"
+        effect: "NoSchedule"
+
+    # Don't inject a sidecar into the gateway pod
+    podAnnotations:
+      sidecar.istio.io/inject: "false"
+
+    service:
+      type: NodePort
+      externalTrafficPolicy: Local
+      ports:
+        - name: status-port
+          port: 15021
+          targetPort: 15021
+          nodePort: 31521
+        - name: http2
+          port: 80
+          targetPort: 8080
+          nodePort: 30080
+        - name: https
+          port: 443
+          targetPort: 8443
+          nodePort: 30443

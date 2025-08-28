@@ -1,0 +1,45 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: calico-operator
+  namespace: tigera-operator
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: tigera-operator
+      # version: <patch per env>
+      sourceRef:
+        kind: HelmRepository
+        name: projectcalico 
+        namespace: flux-system
+  targetNamespace: tigera-operator
+  install:
+    createNamespace: true
+    remediation: { retries: 3 }
+  upgrade:
+    remediation: { retries: 3 }
+
+---
+apiVersion: operator.tigera.io/v1
+kind: Installation
+metadata:
+  name: calico-crs
+spec:
+  variant: Calico
+  registry: "" 
+  calicoNetwork:
+    linuxDataplane: Iptables
+    encapsulation: VXLAN            # good default on kind/Docker
+    ipPools:
+      - cidr: 10.1.0.0/16           # ← match your podSubnet
+        encapsulation: VXLAN
+        natOutgoing: Enabled
+        nodeSelector: all()
+---
+apiVersion: operator.tigera.io/v1
+kind: APIServer
+metadata:
+  name: default
+spec: {}
+
