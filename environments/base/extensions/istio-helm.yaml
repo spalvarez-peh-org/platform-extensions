@@ -36,7 +36,7 @@ spec:
   interval: 5m
   dependsOn:
     - name: istio-base
-      namespace: istio-system
+      namespace: flux-system
   chart:
     spec:
       chart: istiod
@@ -65,9 +65,9 @@ spec:
   interval: 5m
   dependsOn:
     - name: istio-base
-      namespace: istio-system
+      namespace: flux-system
     - name: istiod
-      namespace: istio-system
+      namespace: flux-system
   chart:
     spec:
       chart: gateway
@@ -75,7 +75,6 @@ spec:
         kind: HelmRepository
         name: istio
         namespace: flux-system
-      interval: 1m
   targetNamespace: istio-ingress
   install:
     createNamespace: true
