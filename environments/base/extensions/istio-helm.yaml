@@ -20,7 +20,10 @@ spec:
     remediation:
       retries: 3
       remediateLastFailure: true
-      rollback: true  
+      strategy: rollback  
+  rollback:
+    cleanupOnFail: true
+    disableHooks: false
   values: {}   
 
 ---
@@ -46,7 +49,10 @@ spec:
     remediation:
       retries: 3
       remediateLastFailure: true
-      rollback: true  
+      strategy: rollback  
+  rollback:
+    cleanupOnFail: true
+    disableHooks: false
 
 ---
 
@@ -77,7 +83,10 @@ spec:
     remediation:
       retries: 3
       remediateLastFailure: true
-      rollback: true 
+      strategy: rollback  
+  rollback:
+    cleanupOnFail: true
+    disableHooks: false
   values:
     # keep the conventional name so your Gateway selector uses { istio: ingressgateway }
     nameOverride: istio-ingressgateway
