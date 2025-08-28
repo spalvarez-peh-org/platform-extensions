@@ -2,7 +2,7 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: istio-base
-  namespace: istio-system
+  namespace: flux-system
 spec:
   interval: 5m
   chart:
@@ -31,7 +31,7 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: istiod
-  namespace: istio-system
+  namespace: flux-system
 spec:
   interval: 5m
   dependsOn:
@@ -60,7 +60,7 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: istio-ingress
-  namespace: istio-ingress
+  namespace: flux-system
 spec:
   interval: 5m
   dependsOn:
