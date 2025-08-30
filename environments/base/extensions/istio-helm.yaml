@@ -16,7 +16,13 @@ spec:
   targetNamespace: istio-system
   install:
     createNamespace: true
+    timeout: 10m0s
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+      strategy: rollback
   upgrade:
+    timeout: 10m0s
     remediation:
       retries: 3
       remediateLastFailure: true
@@ -45,7 +51,15 @@ spec:
         name: istio
         namespace: flux-system
   targetNamespace: istio-system
+  install:
+    createNamespace: true
+    timeout: 10m0s
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+      strategy: rollback
   upgrade:
+    timeout: 10m0s
     remediation:
       retries: 3
       remediateLastFailure: true
@@ -78,7 +92,13 @@ spec:
   targetNamespace: istio-ingress
   install:
     createNamespace: true
+    timeout: 10m0s
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+      strategy: rollback
   upgrade:
+    timeout: 10m0s
     remediation:
       retries: 3
       remediateLastFailure: true
