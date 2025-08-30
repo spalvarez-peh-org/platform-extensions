@@ -20,13 +20,11 @@ spec:
     remediation:
       retries: 3
       remediateLastFailure: true
-      strategy: rollback
   upgrade:
     timeout: 10m0s
     remediation:
       retries: 3
       remediateLastFailure: true
-      strategy: rollback  
   rollback:
     cleanupOnFail: true
     disableHooks: false
@@ -57,13 +55,11 @@ spec:
     remediation:
       retries: 3
       remediateLastFailure: true
-      strategy: rollback
   upgrade:
     timeout: 10m0s
     remediation:
       retries: 3
       remediateLastFailure: true
-      strategy: rollback  
   rollback:
     cleanupOnFail: true
     disableHooks: false
@@ -96,13 +92,11 @@ spec:
     remediation:
       retries: 3
       remediateLastFailure: true
-      strategy: rollback
   upgrade:
     timeout: 10m0s
     remediation:
       retries: 3
-      remediateLastFailure: true
-      strategy: rollback  
+      remediateLastFailure: true 
   rollback:
     cleanupOnFail: true
     disableHooks: false
