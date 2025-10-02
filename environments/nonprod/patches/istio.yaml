@@ -1,6 +1,7 @@
+---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
-metadata: { name: istio-base, namespace: istio-system }
+metadata: {name: istio-base, namespace: istio-system}
 spec:
   chart:
     spec:
@@ -8,7 +9,7 @@ spec:
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
-metadata: { name: istiod, namespace: istio-system }
+metadata: {name: istiod, namespace: istio-system}
 spec:
   chart:
     spec:
@@ -16,7 +17,7 @@ spec:
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
-metadata: { name: istio-ingress, namespace: istio-ingress }
+metadata: {name: istio-ingress, namespace: istio-ingress}
 spec:
   chart:
     spec:

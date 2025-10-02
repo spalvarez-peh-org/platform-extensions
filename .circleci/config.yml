@@ -1,0 +1,145 @@
+version: 2.1
+
+orbs:
+  jq: circleci/jq@2.2.0
+
+globals:
+  - &context PLATFORM_ADMIN
+
+on-push-main: &on-push-main
+  branches:
+    only: /main/
+  tags:
+    ignore: /.*/
+
+on-tag-main: &on-tag-main
+  branches:
+    ignore: /.*/
+  tags:
+    only: /.*/
+
+executors:
+  local-machine:
+    machine: true
+    resource_class: peh_runner/local_laptop_runner
+    working_directory: ~/project
+
+commands:
+  set_kubeconfig_from_pulumi:
+    description: Read kubeconfig from a Pulumi stack output and export it
+    parameters:
+      stack_ref: 
+        type: string
+    steps:
+      - run:
+          name: Pulumi stack kubeconfig to file
+          command: |
+            source $BASH_ENV
+            mkdir -p .kube
+            pulumi login
+            pulumi stack output kubeconfig \
+              --stack << parameters.stack_ref >> \
+              --show-secrets > ".kube/<< parameters.stack_ref >>_kubeconfig.yaml"
+            echo 'export KUBECONFIG=$PWD/.kube/<< parameters.stack_ref >>_kubeconfig.yaml' >> $BASH_ENV
+  
+jobs:
+  lint-and-validate:
+    executor: local-machine
+    steps:
+      - checkout
+      - run:
+          name: Basic YAML lint 
+          command: |
+            yamllint --no-warnings environments
+      - run:
+          name: Kustomize build (dev/qa/prod) & schema validate
+          command: |
+            set -eux
+            for ENV in sandbox qa prod; do
+              echo ">>> Build $ENV"
+              kustomize build environments/$ENV > /tmp/${ENV}.yaml
+              # kubeconform: skip unknown CRDs to avoid external schema fetch;
+              kubeconform -summary -strict -ignore-missing-schemas /tmp/${ENV}.yaml
+            done
+      - run:
+          name: Conftest policy
+          command: |
+            set -eux
+            for ENV in sandbox nonprod prod; do
+              kustomize build environments/$ENV > ./${ENV}.yaml
+              # Evaluate both generic k8s & Flux rules
+              conftest test -p policy -o tap ./${ENV}.yaml > ${ENV}_conftest.tap
+            done
+
+  deploy-and-smoke:
+    parameters:
+      stack:
+        type: enum
+        enum: [sandbox, nonprod, prod]
+    executor: local-machine
+    steps:
+      - checkout
+      - set_kubeconfig_from_pulumi:
+          stack: spalvarez/platform-core/<< parameters.stack >>
+      - run:
+          name: Run Flux reconcile test
+          command: ./test/flux_reconcile.sh
+      - run:
+          name: Create smoke namespace
+          command: |
+            kubectl create ns smoke \
+              --dry-run=client -o yaml | kubectl apply -f -
+      - run:
+          name: Run Gateway test
+          command: ./test/gateway.sh
+      - run:
+          name: Clean up Gateway test
+          when: on_success
+          command: |
+            kubectl -n smoke delete job smoke-gateway --ignore-not-found
+            kubectl delete ns smoke --ignore-not-found
+      
+workflows:
+  pr:
+    jobs:
+      - lint-and-validate:
+          context: *context
+  
+  deploy:
+    jobs:
+      - lint-and-validate:
+          context: *context
+      - deploy-and-smoke:
+          name: deploy-and-smoke-sandbox
+          context: *context
+          stack: sandbox
+          environment:
+            SMOKE_HOST: "example.local"
+          requires:
+            - lint-and-validate
+      - hold-for-nonprod:
+          type: approval
+          requires:
+            - deploy-and-smoke-sandbox
+          filters: *on-tag-main
+      - deploy-and-smoke:
+          name: deploy-and-smoke-nonprod
+          context: *context
+          stack: nonprod
+          environment:
+            SMOKE_HOST: "example.local"
+          requires:
+            - hold-for-nonprod
+      - hold-for-prod:
+          type: approval
+          requires:
+            - deploy-and-smoke-nonprod
+          filters: *on-tag-main
+      - deploy-and-smoke:
+          name: deploy-and-smoke-prod
+          context: *context
+          stack: prod
+          environment:
+            SMOKE_HOST: "example.local"
+          requires:
+            - hold-for-prod

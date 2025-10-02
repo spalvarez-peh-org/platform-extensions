@@ -1,3 +1,4 @@
+---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -12,7 +13,7 @@ spec:
         kind: HelmRepository
         name: istio
         namespace: flux-system
-      # version is patched per-env (don’t set here)
+    # version is patched per-env (don’t set here)
   targetNamespace: istio-system
   install:
     createNamespace: true
@@ -28,8 +29,7 @@ spec:
   rollback:
     cleanupOnFail: true
     disableHooks: false
-  values: {}   
-
+  values: {}
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
@@ -63,9 +63,7 @@ spec:
   rollback:
     cleanupOnFail: true
     disableHooks: false
-
 ---
-
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -96,26 +94,27 @@ spec:
     timeout: 10m0s
     remediation:
       retries: 3
-      remediateLastFailure: true 
+      remediateLastFailure: true
   rollback:
     cleanupOnFail: true
     disableHooks: false
   values:
-    # keep the conventional name so your Gateway selector uses { istio: ingressgateway }
+    # keep the conventional name so your Gateway
+    # selector uses { istio: ingressgateway }
     nameOverride: istio-ingressgateway
 
-    # Run on the control-plane node so host->nodePort mapping always works in kind
+    # Run on the control-plane node so host->nodePort
+    # mapping always works in kind
     nodeSelector:
-      node-role.kubernetes.io/control-plane: ""
+      node-role.kubernetes.io/control-plane: ''
     tolerations:
-      - key: "node-role.kubernetes.io/control-plane"
-        operator: "Exists"
-        effect: "NoSchedule"
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
 
     # Don't inject a sidecar into the gateway pod
     podAnnotations:
-      sidecar.istio.io/inject: "false"
-
+      sidecar.istio.io/inject: 'false'
     service:
       type: NodePort
       externalTrafficPolicy: Local
